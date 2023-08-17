@@ -4,6 +4,8 @@ use std::{env, process::exit};
 use crossterm::{style, style::Color, terminal, QueueableCommand, execute};
 use crossterm::cursor::MoveTo;
 
+mod scrape;
+
 fn main() {
     clearscreen::clear().expect("Failed to clean screen!");
     let mut stdout: Stdout = stdout();
@@ -29,13 +31,16 @@ fn main() {
     execute!(stdout, MoveTo((x / 2) - (u16::try_from(warning_2.len() / 2).unwrap()), 1)).expect("Failed to move cursor!");
     println!("{}", warning_2);
 
+    stdout.queue(style::SetForegroundColor(Color::Green)).expect("Failed to set foreground color!");
+    println!("Gathering informations...");
     stdout.queue(style::SetForegroundColor(Color::Reset)).expect("Failed to set/reset foreground color!");
 
-    println!("Gathering informations...");
     println!("    OS: {} | Requested OS: {}", whoami::distro().to_string(), &args[1]);
     println!("    Architecture requested: {}", &args[2]);
     println!("    Package requested: {}", &args[3]);
 
-    // web scrape data
+    println!("");
+
+    scrape::scrape_url(&mut stdout, &scrape::get_url(&args[1], &args[3]));
     // download & install files
 }
