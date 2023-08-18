@@ -2,6 +2,7 @@ use std::io::{Stdout};
 use std::collections::HashMap;
 
 use crossterm::{style, style::Color, terminal, QueueableCommand, execute};
+use regex::Regex;
 
 pub fn get_url(os: &String, package: &String) -> String {
     let mut url: String = String::new();
@@ -33,7 +34,8 @@ fn scrape_matches(stdout: &mut Stdout, matches: &Vec<String>) {
         search_aur()
     }
 
-    let words: Vec<&str> = matches[0].split_whitespace().collect();
+    let re = Regex::new(r"\s{2,}").unwrap();
+    let words: Vec<&str> = re.split(matches[0].as_str()).collect();
 
     let mut word_mapping = HashMap::new();
     for (index, word) in words.iter().enumerate() {

@@ -12,3 +12,4 @@ crossterm_cursor = "0.4.0"
 whoami = "1.4.1"
 reqwest = {version = "0.11", features = ["blocking"]}
 scraper = "0.12.0"
+regex = "1.5"
