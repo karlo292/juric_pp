@@ -3,27 +3,23 @@ use std::collections::HashMap;
 
 use crossterm::{style, style::Color, terminal, QueueableCommand, execute};
 use regex::Regex;
-
-pub fn get_url(os: &String, package: &String) -> String {
-    let mut url: String = String::new();
-
-    match os.as_str() {
-        "arch" => {
-            url = "https://archlinux.org/packages/".to_string();
-            url += "?sort=&q=";
-            url += &package;
-        },
-        _ => println!("Unknown operating system!"),
-    }
-
-    return url;
-}
+use scraper::Html;
 
 fn search_aur() {
     
 }
 
-fn scrape_matches(stdout: &mut Stdout, matches: &Vec<String>) {
+fn scrape_arch_matches(stdout: &mut Stdout, document: &Html) {
+    let selector = scraper::Selector::parse("div#exact-matches>table>tbody>tr").unwrap();
+
+    let mut matches: Vec<String> = Vec::new();
+    for _match in document.select(&selector) {
+        let mut element = _match.text().collect::<Vec<_>>().join(" ");
+        element = element.trim().replace("\n", " ");
+
+        matches.push(element);
+    }
+
     if matches.len() == 0 {
 
         stdout.queue(style::SetForegroundColor(Color::Yellow)).expect("Failed to set foreground color!");
@@ -89,7 +85,7 @@ fn scrape_matches(stdout: &mut Stdout, matches: &Vec<String>) {
     }
 }
 
-pub fn scrape_url(stdout: &mut Stdout, url: &String) {
+pub fn scrape_url(stdout: &mut Stdout, url: String, os: &String) {
     let response = reqwest::blocking::get(
         url,
     )
@@ -98,15 +94,11 @@ pub fn scrape_url(stdout: &mut Stdout, url: &String) {
     .unwrap();
 
     let document = scraper::Html::parse_document(&response);
-    let selector = scraper::Selector::parse("div#exact-matches>table>tbody>tr").unwrap();
 
-    let mut matches: Vec<String> = Vec::new();
-    for _match in document.select(&selector) {
-        let mut element = _match.text().collect::<Vec<_>>().join(" ");
-        element = element.trim().replace("\n", " ");
-
-        matches.push(element);
+    match os.as_str() {
+        "arch" => {
+            scrape_arch_matches(stdout, &document);
+        },
+        _ => println!("Unknown operating system!"),
     }
-
-    scrape_matches(stdout, &matches);
 }

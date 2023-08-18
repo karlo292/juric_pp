@@ -6,6 +6,21 @@ use crossterm::cursor::MoveTo;
 
 mod scrape;
 
+fn get_url(os: &String, package: &String) -> String {
+    let mut url: String = String::new();
+
+    match os.as_str() {
+        "arch" => {
+            url = "https://archlinux.org/packages/".to_string();
+            url += "?sort=&q=";
+            url += &package;
+        },
+        _ => println!("Unknown operating system!"),
+    }
+
+    return url;
+}
+
 fn main() {
     clearscreen::clear().expect("Failed to clean screen!");
     let mut stdout: Stdout = stdout();
@@ -41,6 +56,6 @@ fn main() {
 
     println!("");
 
-    scrape::scrape_url(&mut stdout, &scrape::get_url(&args[1], &args[3]));
+    scrape::scrape_url(&mut stdout, get_url(&args[1], &args[3]), &args[1]);
     // download & install files
 }
