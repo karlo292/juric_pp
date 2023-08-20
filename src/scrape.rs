@@ -3,13 +3,40 @@ use std::collections::HashMap;
 
 use crossterm::{style, style::Color, terminal, QueueableCommand, execute};
 use regex::Regex;
-use scraper::Html;
 
 fn search_aur() {
     
 }
 
-fn scrape_arch_matches(stdout: &mut Stdout, document: &Html) {
+fn scrape_arch_package(url: String) {
+    let response = reqwest::blocking::get(
+        url,
+    )
+    .unwrap()
+    .text()
+    .unwrap();
+
+    let document = scraper::Html::parse_document(&response);
+    let selector = scraper::Selector::parse("div#action_list>ul>li").unwrap();
+
+    let mut matches: Vec<String> = Vec::new();
+    for _match in document.select(&selector) {
+        let mut element = _match.text().collect::<Vec<_>>().join(" ");
+        element = element.trim().replace("\n", " ");
+
+        matches.push(element);
+    }
+}
+
+fn scrape_arch_matches(stdout: &mut Stdout, url: &String) {
+    let response = reqwest::blocking::get(
+        url,
+    )
+    .unwrap()
+    .text()
+    .unwrap();
+
+    let document = scraper::Html::parse_document(&response);
     let selector = scraper::Selector::parse("div#exact-matches>table>tbody>tr").unwrap();
 
     let mut matches: Vec<String> = Vec::new();
@@ -83,21 +110,32 @@ fn scrape_arch_matches(stdout: &mut Stdout, document: &Html) {
     } else {
         println!("    Key not found: {} (Last Updated)!", key);
     }
+
+    let mut pkg_url: String = String::new();
+    pkg_url = "https://archlinux.org/packages/".to_string();
+
+    pkg_url += word_mapping.get("1").unwrap();
+    pkg_url += "/";
+
+    pkg_url += word_mapping.get("0").unwrap();
+    pkg_url += "/";
+
+    pkg_url += word_mapping.get("2").unwrap();
+    pkg_url += "/";
+
+    scrape_arch_package(pkg_url);
 }
 
-pub fn scrape_url(stdout: &mut Stdout, url: String, os: &String) {
-    let response = reqwest::blocking::get(
-        url,
-    )
-    .unwrap()
-    .text()
-    .unwrap();
-
-    let document = scraper::Html::parse_document(&response);
+pub fn scrape_url(stdout: &mut Stdout, os: &String, package: &String) {
+    let mut url: String = String::new();
 
     match os.as_str() {
         "arch" => {
-            scrape_arch_matches(stdout, &document);
+            url = "https://archlinux.org/packages/".to_string();
+            url += "?sort=&q=";
+            url += &package;
+
+            scrape_arch_matches(stdout, &url);
         },
         _ => println!("Unknown operating system!"),
     }
