@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::io::{Stdout, Write};
-use std::process::Command;
+use std::io::{Stdout, Write, Read};
+use std::process::{Command, Stdio};
 use std::{thread, time};
 
 use crossterm::{style, style::Color, QueueableCommand};
@@ -62,20 +62,38 @@ fn download_arch_package(stdout: &mut Stdout, url: &String) {
         utilities::cd_to_folder(&result.to_string());
     }
 
-    let install = Command::new("makepkg")
-            .arg("-si")
-            .output()
-            .expect("Failed to execute process!");
+    // Thanks to ChatGPT for following code
 
-    if !install.status.success() {
+    // Create new command
+    let mut cmd = Command::new("makepkg");
+    
+    // Specify the arguments
+    cmd.args(&["-si"]);
+
+    // Set up stdin to capture input
+    cmd.stdin(Stdio::piped());
+
+    // Spawn the command process
+    let mut child = cmd.spawn().expect("Failed to start makepkg");
+
+    // Prepare to write the password
+    let stdin = child.stdin.as_mut().expect("Failed to open stdin");
+    let confirmation = "y";
+
+    // Write the password to the process's stdin
+    stdin.write_all(confirmation.as_bytes()).expect("Failed to write password");
+    stdin.flush().expect("Failed to flush stdin");
+
+    // Wait for the command to finish
+    let status = child.wait().expect("Failed to wait for makepkg");
+
+    if status.success() {
+        stdout.queue(style::SetForegroundColor(Color::Green)).expect("Failed to set foreground color!");
+        println!("Package has been successfully installed!");
+    } else {
         stdout.queue(style::SetForegroundColor(Color::Red)).expect("Failed to set foreground color!");
-        println!("makepkg failed with exit code {:?}", output.status);
-
-        std::process::exit(0);
+        println!("Package installation failed!");
     }
-
-    stdout.queue(style::SetForegroundColor(Color::Green)).expect("Failed to set foreground color!");
-    println!("Package installed successfully!");
 }
 
 fn scrape_arch_package(stdout: &mut Stdout, url: &String) {
