@@ -1,18 +1,65 @@
-use std::io::{Stdout};
 use std::collections::HashMap;
+use std::io::{Stdout, Write};
+use std::process::Command;
+use std::{thread, time};
 
 use crossterm::{style, style::Color, terminal, QueueableCommand, execute};
 use regex::Regex;
+
+use crate::utilities;
 
 fn search_aur() {
     
 }
 
-fn download_arch_package(url: &String) {
-    println!("\n{}", url);
+fn download_arch_package(stdout: &mut Stdout, url: &String) {
+    utilities::create_temp_folder();
+    utilities::cd_to_temp_folder();
+
+    let mut git = Command::new("git");
+    git.arg("clone")
+        .arg(url);
+
+    let output = git.output().expect("Failed to execute process 'git clone`!");
+
+    println!("");
+
+    stdout.queue(style::SetForegroundColor(Color::Cyan)).expect("Failed to set foreground color!");
+    println!("Files for installation have been downloaded!");
+
+    stdout.queue(style::SetForegroundColor(Color::Rgb { r: (232), g: (149), b: (187) })).expect("Failed to set foreground color!");
+    std::io::stdout().flush().unwrap();
+    print!("Do you want to install them? \\ Wait - ");
+
+    stdout.queue(style::SetForegroundColor(Color::Green)).expect("Failed to set foreground color!");
+    std::io::stdout().flush().unwrap();
+    print!("YES");
+
+    stdout.queue(style::SetForegroundColor(Color::Rgb { r: (232), g: (149), b: (187) })).expect("Failed to set foreground color!");
+    std::io::stdout().flush().unwrap();
+    print!(" | Ctrl-C - ");
+
+    stdout.queue(style::SetForegroundColor(Color::Red)).expect("Failed to set foreground color!");
+    println!("NO");
+
+    stdout.queue(style::SetForegroundColor(Color::Reset)).expect("Failed to reset foreground color!");
+    println!("");
+
+    let mut i: u16 = 0;
+    while i < 5 {
+        thread::sleep(time::Duration::from_secs(1));
+        
+        std::io::stdout().flush().unwrap();
+        print!("█");
+
+        i = i + 1
+    }
+
+    println!("");
+
 }
 
-fn scrape_arch_package(url: &String) {
+fn scrape_arch_package(stdout: &mut Stdout, url: &String) {
     let response = reqwest::blocking::get(
         url,
     )
@@ -22,7 +69,7 @@ fn scrape_arch_package(url: &String) {
 
     let document = scraper::Html::parse_document(&response);
     let selector = scraper::Selector::parse("div#actionlist>ul>li>a").unwrap();
-    
+
     for _match in document.select(&selector) {
         let mut element = _match.text().collect::<Vec<_>>().join(" ");
         element = element.trim().replace("\n", " ");
@@ -31,7 +78,7 @@ fn scrape_arch_package(url: &String) {
             let opt = Some(_match.value().attr("href"));
             let opt_2 = opt.as_ref().unwrap();
 
-            download_arch_package(&opt_2.as_ref().unwrap().to_owned().to_string());
+            download_arch_package(stdout, &opt_2.as_ref().unwrap().to_owned().to_string());
         }
     }
 }
@@ -131,7 +178,7 @@ fn scrape_arch_matches(stdout: &mut Stdout, url: &String) {
     pkg_url += word_mapping.get("2").unwrap();
     pkg_url += "/";
 
-    scrape_arch_package(&pkg_url);
+    scrape_arch_package(stdout, &pkg_url);
 }
 
 pub fn scrape_url(stdout: &mut Stdout, os: &String, package: &String) {

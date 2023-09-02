@@ -5,6 +5,7 @@ use crossterm::{style, style::Color, terminal, QueueableCommand, execute};
 use crossterm::cursor::MoveTo;
 
 mod scrape;
+mod utilities;
 
 fn main() {
     clearscreen::clear().expect("Failed to clean screen!");
