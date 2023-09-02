@@ -3,7 +3,7 @@ use std::io::{Stdout, Write};
 use std::process::Command;
 use std::{thread, time};
 
-use crossterm::{style, style::Color, terminal, QueueableCommand, execute};
+use crossterm::{style, style::Color, QueueableCommand};
 use regex::Regex;
 
 use crate::utilities;
@@ -57,6 +57,21 @@ fn download_arch_package(stdout: &mut Stdout, url: &String) {
 
     println!("");
 
+    if let Some(last_slash_index) = url.rfind('/') {
+        let result = &url[last_slash_index + 1..];
+        utilities::cd_to_folder(&result.to_string());
+    }
+
+    let install = Command::new("makepkg")
+            .arg("-si")
+            .output()
+            .expect("Failed to execute process!");
+
+    if !install.status.success() {
+        eprintln!("makepkg failed with exit code {:?}", output.status);
+        std::process::exit(1);
+    }
+        
 }
 
 fn scrape_arch_package(stdout: &mut Stdout, url: &String) {

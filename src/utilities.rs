@@ -4,6 +4,11 @@ use std::path::Path;
 
 const PATH: &str = ".juric_temp";
 
+pub fn cd_to_folder(folder: &String) {
+    let _path = Path::new(folder);
+    assert!(env::set_current_dir(&_path).is_ok());
+}
+
 pub fn cd_to_temp_folder() {
     let _path = Path::new(PATH);
     assert!(env::set_current_dir(&_path).is_ok())
