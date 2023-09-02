@@ -8,7 +8,11 @@ fn search_aur() {
     
 }
 
-fn scrape_arch_package(url: String) {
+fn download_arch_package(url: &String) {
+    println!("\n{}", url);
+}
+
+fn scrape_arch_package(url: &String) {
     let response = reqwest::blocking::get(
         url,
     )
@@ -17,14 +21,18 @@ fn scrape_arch_package(url: String) {
     .unwrap();
 
     let document = scraper::Html::parse_document(&response);
-    let selector = scraper::Selector::parse("div#action_list>ul>li").unwrap();
-
-    let mut matches: Vec<String> = Vec::new();
+    let selector = scraper::Selector::parse("div#actionlist>ul>li>a").unwrap();
+    
     for _match in document.select(&selector) {
         let mut element = _match.text().collect::<Vec<_>>().join(" ");
         element = element.trim().replace("\n", " ");
 
-        matches.push(element);
+        if element.starts_with("Source") { /*  Source Files, a.k.a repo with files to download)*/
+            let opt = Some(_match.value().attr("href"));
+            let opt_2 = opt.as_ref().unwrap();
+
+            download_arch_package(&opt_2.as_ref().unwrap().to_owned().to_string());
+        }
     }
 }
 
@@ -123,7 +131,7 @@ fn scrape_arch_matches(stdout: &mut Stdout, url: &String) {
     pkg_url += word_mapping.get("2").unwrap();
     pkg_url += "/";
 
-    scrape_arch_package(pkg_url);
+    scrape_arch_package(&pkg_url);
 }
 
 pub fn scrape_url(stdout: &mut Stdout, os: &String, package: &String) {
