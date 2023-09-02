@@ -68,10 +68,14 @@ fn download_arch_package(stdout: &mut Stdout, url: &String) {
             .expect("Failed to execute process!");
 
     if !install.status.success() {
-        eprintln!("makepkg failed with exit code {:?}", output.status);
-        std::process::exit(1);
+        stdout.queue(style::SetForegroundColor(Color::Red)).expect("Failed to set foreground color!");
+        println!("makepkg failed with exit code {:?}", output.status);
+
+        std::process::exit(0);
     }
-        
+
+    stdout.queue(style::SetForegroundColor(Color::Green)).expect("Failed to set foreground color!");
+    println!("Package installed successfully!");
 }
 
 fn scrape_arch_package(stdout: &mut Stdout, url: &String) {
