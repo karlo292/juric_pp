@@ -1,5 +1,7 @@
+#![allow(unused_assignments)]
+
 use std::collections::HashMap;
-use std::io::{Stdout, Write, Read};
+use std::io::{Stdout, Write};
 use std::process::{Command, Stdio};
 use std::{thread, time};
 
@@ -20,7 +22,7 @@ fn download_arch_package(stdout: &mut Stdout, url: &String) {
     git.arg("clone")
         .arg(url);
 
-    let output = git.output().expect("Failed to execute process 'git clone`!");
+    git.output().expect("Failed to execute process 'git clone`!");
 
     println!("");
 
