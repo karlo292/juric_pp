@@ -8,9 +8,9 @@ We'll use web scraping to extract needed data to download & install files
 
 ## Distros done
 - [ ] Alpine Linux
-- [ ] Arch Linux
+- [x] Arch Linux
     - [x] Offical packages
-    - [ ] AUR
+    - [x] AUR
 - [ ] CentOS
 - [ ] Debian
 - [ ] Fedora
