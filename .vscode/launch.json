@@ -16,7 +16,7 @@
         "args": [
             "arch",
             "x86_64",
-            "cowsay"
+            "ccm"
         ]
     }
     ]

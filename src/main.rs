@@ -42,6 +42,5 @@ fn main() {
 
     println!("");
 
-    scrape::scrape_url(&mut stdout, &args[1], &args[3]);
-    // download & install files
+    scrape::generate_url(&mut stdout, &args[1], &args[3]);
 }
