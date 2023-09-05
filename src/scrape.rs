@@ -14,6 +14,41 @@ use reqwest::blocking::Client;
 
 use crate::utilities;
 
+fn execute_arch_aur(stdout: &mut Stdout) {
+    // Thanks to ChatGPT for following code
+
+    // Create new command
+    let mut cmd = Command::new("makepkg");
+    
+    // Specify the arguments
+    cmd.args(&["-si"]);
+
+    // Set up stdin to capture input
+    cmd.stdin(Stdio::piped());
+
+    // Spawn the command process
+    let mut child = cmd.spawn().expect("Failed to start makepkg");
+
+    // Prepare to send confirmation
+    let stdin = child.stdin.as_mut().expect("Failed to open stdin");
+    let confirmation = "y";
+
+    // Write the password to the process's stdin
+    stdin.write_all(confirmation.as_bytes()).expect("Failed to write password");
+    stdin.flush().expect("Failed to flush stdin");
+
+    // Wait for the command to finish
+    let status = child.wait().expect("Failed to wait for makepkg");
+
+    if status.success() {
+        stdout.queue(style::SetForegroundColor(Color::Green)).expect("Failed to set foreground color!");
+        println!("Package has been successfully installed!");
+    } else {
+        stdout.queue(style::SetForegroundColor(Color::Red)).expect("Failed to set foreground color!");
+        println!("Package installation failed!");
+    }
+}
+
 fn download_aur(stdout: &mut Stdout, url: &String, package: &String) {
     /* Create directories */
     utilities::create_temp_folder();
@@ -91,6 +126,7 @@ fn download_aur(stdout: &mut Stdout, url: &String, package: &String) {
     println!("");
 
     // TODO - make better installation "process"
+    execute_arch_aur(stdout);
 }
 
 fn search_aur(stdout: &mut Stdout, package: &String) {
@@ -259,38 +295,7 @@ fn download_arch_package(stdout: &mut Stdout, url: &String) {
         utilities::cd_to_folder(&result.to_string());
     }
 
-    // Thanks to ChatGPT for following code
-
-    // Create new command
-    let mut cmd = Command::new("makepkg");
-    
-    // Specify the arguments
-    cmd.args(&["-si"]);
-
-    // Set up stdin to capture input
-    cmd.stdin(Stdio::piped());
-
-    // Spawn the command process
-    let mut child = cmd.spawn().expect("Failed to start makepkg");
-
-    // Prepare to send confirmation
-    let stdin = child.stdin.as_mut().expect("Failed to open stdin");
-    let confirmation = "y";
-
-    // Write the password to the process's stdin
-    stdin.write_all(confirmation.as_bytes()).expect("Failed to write password");
-    stdin.flush().expect("Failed to flush stdin");
-
-    // Wait for the command to finish
-    let status = child.wait().expect("Failed to wait for makepkg");
-
-    if status.success() {
-        stdout.queue(style::SetForegroundColor(Color::Green)).expect("Failed to set foreground color!");
-        println!("Package has been successfully installed!");
-    } else {
-        stdout.queue(style::SetForegroundColor(Color::Red)).expect("Failed to set foreground color!");
-        println!("Package installation failed!");
-    }
+    execute_arch_aur(stdout);
 }
 
 fn scrape_arch_package(stdout: &mut Stdout, url: &String) {
