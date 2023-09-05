@@ -42,5 +42,5 @@ fn main() {
 
     println!("");
 
-    scrape::generate_url(&mut stdout, &args[1], &args[3]);
+    scrape::scrape(&mut stdout, &args[1], &args[3]);
 }
