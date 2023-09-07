@@ -25,6 +25,7 @@ struct ArchLinux {
 }
 
 impl ArchLinux {
+    /// Download package
     fn download(&self, stdout: &mut Stdout, url: &String) {
         utilities::create_temp_folder();
         utilities::cd_to_temp_folder();
