@@ -1,46 +1,76 @@
-use std::io::{stdout, Stdout};
-use std::{env, process::exit};
+// Import necessary libraries and modules
+use std::env;
+use std::process::exit;
 
-use crossterm::{style, style::Color, terminal, QueueableCommand, execute};
+use crossterm::{execute, style, style::Color, terminal};
 use crossterm::cursor::MoveTo;
+use std::io::Stdout;
 
+// Import custom modules
 mod scrape;
 mod utilities;
 
 fn main() {
-    clearscreen::clear().expect("Failed to clean screen!");
-    let mut stdout: Stdout = stdout();
+    // Clear the screen
+    clear_screen();
 
+    // Get command-line arguments
     let args: Vec<String> = env::args().collect();
 
+    // Check if there are enough command-line arguments
     if args.len() < 4 {
         println!("Too few arguments passed!");
         println!("Usage: ./cargo run --release <distro> <architecture> <package>");
-
         exit(0);
     }
 
-    let warning_1: String = String::from("Juric++ is not offical package manager of your distribution. ringwormGO does not gurrant safety of your files!");
-    let warning_2: String = String::from("User discretion advised!");
+    // Display warnings
+    display_warnings();
 
-    let x: u16 = terminal::size().unwrap().0;
+    // Display gathered information
+    display_info(&args[1], &args[2], &args[3]);
+
+    // Perform the scraping
+    scrape::scrape(&mut stdout(), &args[1], &args[3]);
+}
+
+fn clear_screen() {
+    // Clear the screen using the clearscreen crate
+    clearscreen::clear().expect("Failed to clean screen!");
+}
+
+fn display_warnings() {
+    // Display warnings in red color
+    let warning_1 = "Juric++ is not an official package manager of your distribution. ringwormGO does not guarantee the safety of your files!";
+    let warning_2 = "User discretion is advised!";
+
+    let x = terminal::size().unwrap().0;
+    let mut stdout: Stdout = stdout();
+
     stdout.queue(style::SetForegroundColor(Color::Red)).expect("Failed to set foreground color!");
 
-    execute!(stdout, MoveTo((x / 2) - (u16::try_from(warning_1.len() / 2).unwrap()), 0)).expect("Failed to move cursor!");
-    println!("{}", warning_1);
+    display_centered_text(&mut stdout, warning_1);
+    display_centered_text(&mut stdout, warning_2);
 
-    execute!(stdout, MoveTo((x / 2) - (u16::try_from(warning_2.len() / 2).unwrap()), 1)).expect("Failed to move cursor!");
-    println!("{}", warning_2);
-
+    // Reset text color to green
     stdout.queue(style::SetForegroundColor(Color::Green)).expect("Failed to set foreground color!");
-    println!("Gathering informations...");
+    println!("Gathering information...");
     stdout.queue(style::SetForegroundColor(Color::Reset)).expect("Failed to set/reset foreground color!");
+}
 
-    println!("    OS: {} | Requested OS: {}", whoami::distro().to_string(), &args[1]);
-    println!("    Architecture requested: {}", &args[2]);
-    println!("    Package requested: {}", &args[3]);
+fn display_centered_text(stdout: &mut Stdout, text: &str) {
+    // Display text centered horizontally
+    let x = terminal::size().unwrap().0;
+    let center_x = (x / 2) - (text.len() as u16 / 2);
 
-    println!("");
+    execute!(stdout, MoveTo(center_x, 0)).expect("Failed to move cursor!");
+    println!("{}", text);
+}
 
-    scrape::scrape(&mut stdout, &args[1], &args[3]);
+fn display_info(distro: &str, architecture: &str, package: &str) {
+    // Display gathered information
+    println!("OS: {} | Requested OS: {}", whoami::distro().to_string(), distro);
+    println!("Architecture requested: {}", architecture);
+    println!("Package requested: {}", package);
+    println!();
 }
